@@ -7,7 +7,7 @@ const url = `mongodb://${DB_HOST}:${DB_PORT}`;
 
 class DBClient {
   constructor() {
-    MongoClient.connect(url,  { useUnifiedTopology: true }, (error, client) => {
+    MongoClient.connect(url, { useUnifiedTopology: true }, (error, client) => {
       if (error) {
         console.log(error);
         this.db = false;
@@ -19,8 +19,8 @@ class DBClient {
   }
 
   isAlive() {
-   return Boolean(this.db);
-    }
+    return Boolean(this.db);
+  }
 
   async nbUsers() {
     const numUsersDocument = this.usersCollection.countDocuments();
