@@ -1,11 +1,18 @@
 import express from 'express';
 import AppController from '../controllers/AppController';
+import UsersController from '../controllers/UsersController';
 
-const routes = express.Router();
+function routeController(app) {
+  const route = express.Router();
+  app.use('/', route);
 
-routes.get('/status', AppController.getStatus);
-routes.get('/stats', AppController.getStats);
+  route.get('/status', AppController.getStatus);
+  route.get('/stats', AppController.getStats);
 
-// Authenticate a user
+  route.get('/connect', AuthController.getConnect);
+  route.get('/disconnect', AuthController.getDisconnect);
+  route.get('/users/me', UserController.getMe);
 
-export default routes;
+}
+
+module.exports = routeController;
