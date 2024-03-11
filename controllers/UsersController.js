@@ -1,7 +1,7 @@
 import dbclient from '../utils/db';
 import redisClient from '../utils/redis';
 
-class UsersController {
+class UserController {
   static async getMe(request, response) {
     const { headers } = response;
     const token = headers.get('X-Token');
