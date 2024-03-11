@@ -16,9 +16,9 @@ class UsersController {
     }
 
     const hashedPwd = sha1(password);
-    await dbclient.usersCollection.insert({ email, password: hashedPwd });
+    const insertData = await dbclient.usersCollection.insert({ email, password: hashedPwd });
 
-    const user = await dbclient.usersCollection.find({ email }, { _id: 1, email: 1 });
+    const user = { id: insertData.insertedId, email };
     return response.status(201).send(user);
   }
 }
