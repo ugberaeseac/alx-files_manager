@@ -7,23 +7,30 @@ class AuthController {
   static async getConnect(request, response) {
     const { headers } = request;
     const { authorization } = headers;
+
     if (!authorization) {
       console.log('Authorization not found');
       return;
     }
+
     const [authType, encodeCredentials] = authorization.split(' ');
+
     if (authType !== 'Basic') {
       console.log(`unsupported type ${authType}`);
       return;
     }
+
     const decodedCredential = Buffer.from(encodeCredentials, 'base64').toString('utf-8');
     const emailPassword = decodedCredential.split(':');
     const email = emailPassword[0];
+
     const user = await dbClient.usersCollection.findOne({ email });
+
     if (!user) {
       response.status(401).send({ error: 'Unauthorized' });
       return;
     }
+
     const token = uuidv4();
     const key = `auth_${token}`;
     const userId = user._id.toString();
@@ -40,12 +47,15 @@ class AuthController {
     const userId = await redisClient.get(key);
     const userObjectId = new ObjectID(userId);
     const user = await dbClient.usersCollection.findOne({ _id: userObjectId });
-    // If not found, return an error Unauthorized with a status code 401
+
     if (!user) {
-      return response.status(401).send({ error: 'Unauthorized' });
+      response.status(401).send({ error: 'Unauthorized' });
+      return;
     }
+
     await redisClient.del(key);
-    return response.status(204).send();
+    response.status(204).send();
   }
 }
+
 module.exports = AuthController;
