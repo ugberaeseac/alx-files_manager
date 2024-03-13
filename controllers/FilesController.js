@@ -29,16 +29,16 @@ class FilesController {
       return response.status(400).send({ error: 'Missing name' });
     }
     // Validate type
-    if (!type || !['folder', 'file', 'image'].includes(type)) {
+    if (!type && !['folder', 'file', 'image'].includes(type)) {
       return response.status(400).send({ error: 'Missing type' });
     }
 
-    if (!data && type !== 'folder') {
+    if (!data || type !== 'folder') {
       return response.status(400).send({ error: 'Missing data' });
     }
     if (parentId !== 0) {
       // check if no file is present in DB
-      const file = await dbClient.filesCollection.findOne({ parentId: new ObjectID(parentId) });
+      const file = await dbClient.filesCollection.findOne({ parentId });
       if (!file) {
         return response.status(400).send({ error: 'Parent not found' });
       }
@@ -48,7 +48,7 @@ class FilesController {
     }
     if (type === 'folder') {
       const result = await dbClient.filesCollection.insertOne({
-        userId: ObjectID(userId), name, type, isPublic, parentId: ObjectID(parentId),
+        userId, name, type, isPublic, parentId,
       });
       const id = result.insertedId.toString(); // file id
       const newFile = {
@@ -64,25 +64,20 @@ class FilesController {
     const localPath = path.join(folderPath, filename);
     // Check if the storing folder exists, if not, create it
     if (!fs.existsSync(folderPath)) {
-      try {
-        fs.mkdirSync(folderPath, { recursive: true });
-      } catch (error) {
-        console.log('error create folder', error);
-        return response.status(500).send({ error: 'Internal server error' });
-      }
+      fs.mkdirSync(folderPath, { recursive: true });
     }
-
     const decodeData = Buffer.from(data, 'base64').toString('utf-8');
     // write content to the file
-    try {
-      fs.writeFileSync(localPath, decodeData);
-    } catch (error) {
-      console.error('Error creating file:', error);
-      return response.status(500).send({ error: 'Internal server error' });
-    }
+    fs.writeFile(localPath, decodeData, (error) => {
+      if (error) {
+        console.log('Error creating file', error);
+        return;
+      }
+      console.log(`${localPath} file created`);
+    });
     // save the new file document in DB
     const result = await dbClient.filesCollection.insertOne({
-      userId: ObjectID(userId), name, type, isPublic, parentId: ObjectID(parentId), localPath,
+      userId, name, type, isPublic, parentId, localPath,
     });
     const id = result.insertedId.toString(); // file id
     const newFile = {
