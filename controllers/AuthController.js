@@ -4,6 +4,7 @@ import dbClient from '../utils/db';
 import redisClient from '../utils/redis';
 
 class AuthController {
+  // eslint-disable-next-line consistent-return
   static async getConnect(request, response) {
     const { headers } = request;
     const { authorization } = headers;
@@ -22,6 +23,7 @@ class AuthController {
 
           await redisClient.set(key, userId, 86400);
           data = { token };
+          return response.status(200).send(data);
         }
         return response.status(401).send({ error: 'Unauthorized' });
       }
@@ -29,7 +31,6 @@ class AuthController {
     } else {
       console.log('Authorization not found');
     }
-    return response.status(200).send(data);
   }
 
   static async getDisconnect(request, response) {
