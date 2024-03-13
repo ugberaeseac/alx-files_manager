@@ -9,15 +9,14 @@ class AuthController {
     const { authorization } = headers;
 
     if (!authorization) {
-      console.log('Authorization not found');
-      return;
+      // console.log('Authorization not found');
+      return response.status(401).send({ error: 'Unauthorized' });
     }
 
     const [authType, encodeCredentials] = authorization.split(' ');
 
     if (authType !== 'Basic') {
       console.log(`unsupported type ${authType}`);
-      return;
     }
 
     const decodedCredential = Buffer.from(encodeCredentials, 'base64').toString('utf-8');
@@ -27,8 +26,7 @@ class AuthController {
     const user = await dbClient.usersCollection.findOne({ email });
 
     if (!user) {
-      response.status(401).send({ error: 'Unauthorized' });
-      return;
+      return response.status(401).send({ error: 'Unauthorized' });
     }
 
     const token = uuidv4();
@@ -37,7 +35,7 @@ class AuthController {
 
     await redisClient.set(key, userId, 86400);
     const data = { token };
-    response.status(200).send(data);
+    return response.status(200).send(data);
   }
 
   static async getDisconnect(request, response) {
