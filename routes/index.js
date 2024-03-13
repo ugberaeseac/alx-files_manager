@@ -1,6 +1,7 @@
 import express from 'express';
 import UsersController from '../controllers/UsersController';
 import AppController from '../controllers/AppController';
+import AuthController from '../controllers/AuthController';
 
 function routeController(app) {
   const route = express.Router();
@@ -11,6 +12,10 @@ function routeController(app) {
   });
   app.get('/status', AppController.getStatus);
   app.get('/stats', AppController.getStats);
+
+  app.get('/connect', AuthController.getConnect);
+  app.get('/disconnect', AuthController.getDisconnect);
+  app.get('/users/me', UsersController.getMe);
 }
 
 module.exports = routeController;
