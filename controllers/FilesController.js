@@ -33,7 +33,7 @@ class FilesController {
       return response.status(400).send({ error: 'Missing type' });
     }
 
-    if (!data || type !== 'folder') {
+    if (!data && type !== 'folder') {
       return response.status(400).send({ error: 'Missing data' });
     }
     if (parentId !== 0) {
@@ -42,7 +42,7 @@ class FilesController {
       if (!file) {
         return response.status(400).send({ error: 'Parent not found' });
       }
-      if (file && file.type !== 'folder') {
+      if (file && type !== 'folder') {
         return response.status(400).send({ error: 'Parent is not a folder' });
       }
     }
