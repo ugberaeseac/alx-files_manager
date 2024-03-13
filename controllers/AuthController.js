@@ -19,11 +19,9 @@ class AuthController {
         if (user) {
           const token = uuidv4();
           const key = `auth_${token}`;
-          // console.log(user._id);
           const userId = user._id.toString();
 
           await redisClient.set(key, userId, 86400);
-          // console.log(await redisClient.get(key));
           data = { token };
           return response.status(200).send(data);
         }
@@ -41,9 +39,7 @@ class AuthController {
     const key = `auth_${token}`;
     const userId = await redisClient.get(key);
     const userObjectId = new ObjectID(userId);
-    console.log(userObjectId);
     const user = await dbClient.usersCollection.findOne({ _id: userObjectId });
-    console.log(user);
     // If not found, return an error Unauthorized with a status code 401
     if (!user) {
       return response.status(401).json({ error: 'Unauthorized' });

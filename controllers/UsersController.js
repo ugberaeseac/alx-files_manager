@@ -30,12 +30,9 @@ class UsersController {
     const token = headers['x-token'];
     const key = `auth_${token}`;
     const userId = await redisClient.get(key);
-    console.log(userId);
     const userObjectId = new ObjectID(userId);
-    console.log(userObjectId);
     const user = await dbClient.usersCollection.findOne({ _id: userObjectId });
     // If not found, return an error Unauthorized with a status code 401
-    console.log(user);
     if (!user) {
       return response.status(401).json({ error: 'Unauthorized' });
     }
