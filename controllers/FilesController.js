@@ -64,18 +64,22 @@ class FilesController {
     const localPath = path.join(folderPath, filename);
     // Check if the storing folder exists, if not, create it
     if (!fs.existsSync(folderPath)) {
-      fs.mkdirSync(folderPath, { recursive: true });
+      try {
+        fs.mkdirSync(folderPath, { recursive: true });
+      } catch (error) {
+        console.log('error create folder', error);
+        return response.status(500).send({ error: 'Internal server error' });
+      }
     }
 
     const decodeData = Buffer.from(data, 'base64').toString('utf-8');
     // write content to the file
-    fs.writeFile(localPath, decodeData, (error) => {
-      if (error) {
-        console.log('Error creating file', error);
-        return;
-      }
-      console.log(`${localPath} file created`);
-    });
+    try {
+      fs.writeFileSync(localPath, decodeData);
+    } catch (error) {
+      console.error('Error creating file:', error);
+      return response.status(500).send({ error: 'Internal server error' });
+    }
     // save the new file document in DB
     const result = await dbClient.filesCollection.insertOne({
       userId, name, type, isPublic, parentId, localPath,
