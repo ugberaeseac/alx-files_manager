@@ -38,7 +38,7 @@ class FilesController {
     }
     if (parentId !== 0) {
       // check if no file is present in DB
-      const file = await dbClient.filesCollection.findOne({ parentId });
+      const file = await dbClient.filesCollection.findOne({ parentId: new ObjectID(parentId) });
       if (!file) {
         return response.status(400).send({ error: 'Parent not found' });
       }
@@ -48,7 +48,7 @@ class FilesController {
     }
     if (type === 'folder') {
       const result = await dbClient.filesCollection.insertOne({
-        userId, name, type, isPublic, parentId,
+        userId: new ObjectID(userId), name, type, isPublic, parentId: new ObjectID(parentId),
       });
       const id = result.insertedId.toString(); // file id
       const newFile = {
@@ -77,7 +77,12 @@ class FilesController {
     });
     // save the new file document in DB
     const result = await dbClient.filesCollection.insertOne({
-      userId, name, type, isPublic, parentId, localPath,
+      userId: new ObjectID(userId),
+      name,
+      type,
+      isPublic,
+      parentId: new ObjectID(parentId),
+      localPath,
     });
     const id = result.insertedId.toString(); // file id
     const newFile = {
