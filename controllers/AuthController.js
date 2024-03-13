@@ -4,33 +4,33 @@ import dbClient from '../utils/db';
 import redisClient from '../utils/redis';
 
 class AuthController {
-  // eslint-disable-next-line consistent-return
   static async getConnect(request, response) {
     const { headers } = request;
     const { authorization } = headers;
-    let data = null;
-    if (authorization) {
-      const [authType, encodeCredentials] = authorization.split(' ');
-      if (authType === 'Basic') {
-        const decodedCredential = Buffer.from(encodeCredentials, 'base64').toString('utf-8');
-        const emailPassword = decodedCredential.split(':');
-        const email = emailPassword[0];
-        const user = await dbClient.usersCollection.findOne({ email });
-        if (user) {
-          const token = uuidv4();
-          const key = `auth_${token}`;
-          const userId = user._id.toString();
-
-          await redisClient.set(key, userId, 86400);
-          data = { token };
-          return response.status(200).send(data);
-        }
-        return response.status(401).send({ error: 'Unauthorized' });
-      }
-      console.log(`unsupported type ${authType}`);
-    } else {
+    if (!authorization) {
       console.log('Authorization not found');
+      return;
     }
+    const [authType, encodeCredentials] = authorization.split(' ');
+    if (authType !== 'Basic') {
+      console.log(`unsupported type ${authType}`);
+      return;
+    }
+    const decodedCredential = Buffer.from(encodeCredentials, 'base64').toString('utf-8');
+    const emailPassword = decodedCredential.split(':');
+    const email = emailPassword[0];
+    const user = await dbClient.usersCollection.findOne({ email });
+    if (!user) {
+      response.status(401).send({ error: 'Unauthorized' });
+      return;
+    }
+    const token = uuidv4();
+    const key = `auth_${token}`;
+    const userId = user._id.toString();
+
+    await redisClient.set(key, userId, 86400);
+    const data = { token };
+    response.status(200).send(data);
   }
 
   static async getDisconnect(request, response) {
