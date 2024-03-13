@@ -21,83 +21,69 @@ class FilesController {
       return response.status(400).send({ error: 'Invalid request body' });
     }
 
-    // Validate required fields
+    // to create file
     const {
       name, type, parentId = 0, isPublic = false, data,
     } = body;
     if (!name) {
       return response.status(400).send({ error: 'Missing name' });
     }
-    if (!type || !['folder', 'file', 'image'].includes(type)) {
-      return response.status(400).send({ error: 'Missing or invalid type' });
-    }
-    if (type !== 'folder' && !data) {
-      return response.status(400).send({ error: 'Missing data' });
+    // Validate type
+    if (!type && !['folder', 'file', 'image'].includes(type)) {
+      return response.status(400).send({ error: 'Missing type' });
     }
 
-    // Validate parentId
+    if (!data && type !== 'folder') {
+      return response.status(400).send({ error: 'Missing data' });
+    }
     if (parentId !== 0) {
-      const parentFile = await dbClient.filesCollection.findOne({ _id: new ObjectID(parentId) });
-      if (!parentFile) {
+      // check if no file is present in DB
+      const file = await dbClient.filesCollection.findOne({ parentId: new ObjectID(parentId) });
+      if (!file) {
         return response.status(400).send({ error: 'Parent not found' });
       }
-      if (parentFile.type !== 'folder') {
+      if (file.type !== 'folder') {
         return response.status(400).send({ error: 'Parent is not a folder' });
       }
     }
-
-    // Create local storage folder path
-    const folderPath = process.env.FOLDER_PATH || '/tmp/files_manager';
-    const localFolderPath = path.join(folderPath, 'files');
-    if (!fs.existsSync(localFolderPath)) {
-      fs.mkdirSync(localFolderPath, { recursive: true });
-    }
-
-    // Process file upload
-    if (type !== 'folder') {
-      const fileData = Buffer.from(data, 'base64');
-      const filename = uuidv4();
-      const localFilePath = path.join(localFolderPath, filename);
-      fs.writeFileSync(localFilePath, fileData);
-
-      // Save file data to DB
+    if (type === 'folder') {
       const result = await dbClient.filesCollection.insertOne({
-        userId: new ObjectID(userId),
-        name,
-        type,
-        isPublic,
-        parentId: new ObjectID(parentId),
-        localPath: localFilePath,
+        userId, name, type, isPublic, parentId,
       });
+      const id = result.insertedId; // file id
       const newFile = {
-        id: result.insertedId,
-        userId,
-        name,
-        type,
-        isPublic,
-        parentId,
-        localPath: localFilePath,
+        id, userId, name, type, isPublic, parentId,
       };
       return response.status(201).send(newFile);
     }
-
-    // For folder type, save folder data to DB
-    const result = await dbClient.filesCollection.insertOne({
-      userId: new ObjectID(userId),
-      name,
-      type,
-      isPublic,
-      parentId: new ObjectID(parentId),
+    let folderPath = process.env.FOLDER_PATH;
+    if (!folderPath || folderPath.length === 0) {
+      folderPath = '/tmp/files_manager';
+    }
+    const filename = uuidv4();
+    const localPath = path.join(folderPath, filename);
+    // Check if the storing folder exists, if not, create it
+    if (!fs.existsSync(folderPath)) {
+      fs.mkdirSync(folderPath, { recursive: true });
+    }
+    const decodeData = Buffer.from(data, 'base64').toString('utf-8');
+    // write content to the file
+    fs.writeFile(localPath, decodeData, (error) => {
+      if (error) {
+        console.log('Error creating file', error);
+        return;
+      }
+      console.log(`${localPath} file created`);
     });
-    const newFolder = {
-      id: result.insertedId,
-      userId,
-      name,
-      type,
-      isPublic,
-      parentId,
+    // save the new file document in DB
+    const result = await dbClient.filesCollection.insertOne({
+      userId, name, type, isPublic, parentId, localPath,
+    });
+    const id = result.insertedId; // file id
+    const newFile = {
+      id, userId, name, type, isPublic, parentId,
     };
-    return response.status(201).send(newFolder);
+    return response.status(201).send(newFile);
   }
 }
 
