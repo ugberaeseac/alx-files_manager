@@ -25,7 +25,7 @@ class AuthController {
           data = { token };
           return response.status(200).send(data);
         }
-        return response.status(401).json({ error: 'Unauthorized' });
+        return response.status(401).send({ error: 'Unauthorized' });
       }
       console.log(`unsupported type ${authType}`);
     } else {
@@ -42,10 +42,10 @@ class AuthController {
     const user = await dbClient.usersCollection.findOne({ _id: userObjectId });
     // If not found, return an error Unauthorized with a status code 401
     if (!user) {
-      return response.status(401).json({ error: 'Unauthorized' });
+      return response.status(401).send({ error: 'Unauthorized' });
     }
     await redisClient.del(key);
-    return response.status(201).json();
+    return response.status(204).send();
   }
 }
 module.exports = AuthController;

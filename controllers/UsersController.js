@@ -34,9 +34,9 @@ class UsersController {
     const user = await dbClient.usersCollection.findOne({ _id: userObjectId });
     // If not found, return an error Unauthorized with a status code 401
     if (!user) {
-      return response.status(401).json({ error: 'Unauthorized' });
+      return response.status(401).send({ error: 'Unauthorized' });
     }
-    return response.status(201).json({ id: userId, email: user.email });
+    return response.status(200).send({ id: userId, email: user.email });
   }
 }
 module.exports = UsersController;
