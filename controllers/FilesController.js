@@ -48,7 +48,7 @@ class FilesController {
     }
     if (type === 'folder') {
       const result = await dbClient.filesCollection.insertOne({
-        userId: new ObjectID(userId), name, type, isPublic, parentId: new ObjectID(parentId),
+        userId, name, type, isPublic, parentId,
       });
       const id = result.insertedId.toString(); // file id
       const newFile = {
@@ -77,12 +77,7 @@ class FilesController {
     });
     // save the new file document in DB
     const result = await dbClient.filesCollection.insertOne({
-      userId: new ObjectID(userId),
-      name,
-      type,
-      isPublic,
-      parentId: new ObjectID(parentId),
-      localPath,
+      userId, name, type, isPublic, parentId, localPath,
     });
     const id = result.insertedId.toString(); // file id
     const newFile = {
