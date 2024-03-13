@@ -1,6 +1,6 @@
 import { ObjectID } from 'mongodb';
 import { v4 as uuidv4 } from 'uuid';
-import { existsSync, mkdirSync, writeFile } from 'fs';
+import fs from 'fs';
 import path from 'path';
 import dbClient from '../utils/db';
 import redisClient from '../utils/redis';
@@ -22,12 +22,14 @@ class FilesController {
     }
 
     // to create file
-    const [name, type, parentId = 0, isPublic = false, data] = body;
+    const {
+      name, type, parentId = 0, isPublic = false, data,
+    } = body;
     if (!name) {
       return response.status(400).send({ error: 'Missing name' });
     }
     // Validate type
-    if (!type && !['folder', 'file', 'image'].includes(type)) {
+    if (!type || !['folder', 'file', 'image'].includes(type)) {
       return response.status(400).send({ error: 'Missing type' });
     }
 
@@ -61,12 +63,13 @@ class FilesController {
     const filename = uuidv4();
     const localPath = path.join(folderPath, filename);
     // Check if the storing folder exists, if not, create it
-    if (!existsSync(folderPath)) {
-      mkdirSync(folderPath, { recursive: true });
+    if (!fs.existsSync(folderPath)) {
+      fs.mkdirSync(folderPath, { recursive: true });
     }
+
     const decodeData = Buffer.from(data, 'base64').toString('utf-8');
     // write content to the file
-    writeFile(localPath, decodeData, (error) => {
+    fs.writeFile(localPath, decodeData, (error) => {
       if (error) {
         console.log('Error creating file', error);
         return;
