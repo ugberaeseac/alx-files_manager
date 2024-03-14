@@ -24,9 +24,11 @@ class AuthController {
     const email = emailPassword[0];
     const password = emailPassword[1];
 
-    const user = await dbClient.usersCollection.findOne({ email, password });
-
+    const user = await dbClient.usersCollection.findOne({ email });
     if (!user) {
+      return response.status(401).send({ error: 'Unauthorized' });
+    }
+    if (user && user.password !== password) {
       return response.status(401).send({ error: 'Unauthorized' });
     }
 
