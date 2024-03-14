@@ -19,6 +19,8 @@ function routeController(app) {
   app.get('/users/me', UsersController.getMe);
 
   app.post('/files', FilesController.postUpload);
+
+  app.get('/files/:id/data', FilesController.getFile);
 }
 
 module.exports = routeController;
